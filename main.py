@@ -1,19 +1,10 @@
 from fastapi import FastAPI
-from schemas import Item
+from schemas import Item, fakeDatabase
 import requests
 import json
 from requests.structures import CaseInsensitiveDict
 
 app = FastAPI()
-
-
-# Creating a fake database
-fakeDatabase = {
-    1: {'task': 'Clean car'},
-    2: {'task': 'Write blog'},
-    3: {'task': 'Start stream'},
-    4: {'task': 'Do homework'},
-}
 
 
 @app.get("/")
@@ -37,7 +28,7 @@ def getItemId(id: int):
 @app.post("/")
 def addItem(item:Item):
     newId = len(fakeDatabase.keys()) + 1 # Give the key of dicionarie and add one more
-    fakeDatabase[newId] = {'task': item.task} # Create a new object
+    fakeDatabase[newId] = {item.task: item.task} # Create a new object
     return fakeDatabase
 
 # OBS: When the method pass many parameters, its better create a class
