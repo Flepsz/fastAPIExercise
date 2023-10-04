@@ -28,7 +28,7 @@ def getItemId(id: int):
 #With a class
 @app.post("/post")
 def addItem(item:Item):
-    newId = len(fakeDatabase.keys()) + 1 # Give the key of dicionarie and add one more
+    newId = len(fakeDatabase.keys()) + 1 
     fakeDatabase[newId] = {'company': item.company} 
     return fakeDatabase
 
@@ -46,19 +46,21 @@ def deleteItem(id: int):
 @app.get("/cnpj/{cnpj}")
 def getAPICNPJ(cnpj: str): 
     try:
+        # Requisição da API CNPJ
         url = f'https://publica.cnpj.ws/cnpj/{cnpj}'
         response = requests.get(url)
         response.raise_for_status()
         
         data = response.json()
 
+        # Json da API
         dataCompany = data['razao_social']
         dataCNPJ = data['cnpj_raiz']
 
         
         if 'razao_social' and 'cnpj_raiz' in data:
-            newEntry = {dataCompany:dataCNPJ}
-            fakeDatabase.update(newEntry)
+            newId = len(fakeDatabase.keys()) + 1 
+            fakeDatabase[newId] = {dataCompany:dataCNPJ} 
             return fakeDatabase
             
         else:
@@ -67,12 +69,16 @@ def getAPICNPJ(cnpj: str):
         raise HTTPException(status_code=500, detail="Erro na solicitação HTTP para a API externa")
     except (KeyError, json.JSONDecodeError) as e:
         raise HTTPException(status_code=500, detail="Erro ao processar a resposta da API externa")
-
-
+    
+    
 """
     CNPJs: 
     11878898000111
     00623904000173
     06947283000160
     05720854000166
+    07526557000100
+    12648266000124
+    12648266000124
+    09288252000132
 """
