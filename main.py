@@ -26,13 +26,11 @@ def getItemId(id: int):
 #     return fakeDatabase
 
 #With a class
-@app.post("/")
+@app.post("/post")
 def addItem(item:Item):
     newId = len(fakeDatabase.keys()) + 1 # Give the key of dicionarie and add one more
-    fakeDatabase[newId] = {item.company: item.company} # Create a new object
+    fakeDatabase[newId] = {'company': item.company} 
     return fakeDatabase
-
-# OBS: When the method pass many parameters, its better create a class
 
 @app.put("/{id}")
 def updateItem(id: int, item:Item):
@@ -44,6 +42,7 @@ def deleteItem(id: int):
     del fakeDatabase[id]
     return fakeDatabase
 
+
 @app.get("/cnpj/{cnpj}")
 def getAPICNPJ(cnpj: str): 
     try:
@@ -52,13 +51,16 @@ def getAPICNPJ(cnpj: str):
         response.raise_for_status()
         
         data = response.json()
+
         dataCompany = data['razao_social']
         dataCNPJ = data['cnpj_raiz']
 
-        # Logic for add company in Task
         
-        if 'razao_social':
-            return data['razao_social'], data['cnpj_raiz']
+        if 'razao_social' and 'cnpj_raiz' in data:
+            newEntry = {dataCompany:dataCNPJ}
+            fakeDatabase.update(newEntry)
+            return fakeDatabase
+            
         else:
             return "Dados ausentes na resposta da API externa"
     except requests.exceptions.RequestException as e:
@@ -66,3 +68,11 @@ def getAPICNPJ(cnpj: str):
     except (KeyError, json.JSONDecodeError) as e:
         raise HTTPException(status_code=500, detail="Erro ao processar a resposta da API externa")
 
+
+"""
+    CNPJs: 
+    11878898000111
+    00623904000173
+    06947283000160
+    05720854000166
+"""
