@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from schemas import Item, fakeDatabase
 import requests
+import uvicorn
 from requests.structures import CaseInsensitiveDict
 import json
 from fastapi import HTTPException
 
 app = FastAPI()
-
 
 @app.get("/")
 def getItems():
@@ -70,7 +70,72 @@ def getAPICNPJ(cnpj: str):
     except (KeyError, json.JSONDecodeError) as e:
         raise HTTPException(status_code=500, detail="Erro ao processar a resposta da API externa")
     
+@app.get("/lol/{nickname}")
+def getAPInickname(nickname: str):
+    try:
+        token = "RGAPI-c62b7eac-eed1-4a05-9823-1d858e634191"
+        region = "br1"
+        # Requisição da API CNPJ
+        url = f'https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{nickname}?api_key={token}'
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        data = response.json()
+
+        puuid = data["puuid"]
+        name = data["name"]
+        summonerLevel = data["summonerLevel"]
+
+        return data
+            
+        # else:
+        #     return "Dados ausentes na resposta da API externa"
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail="Erro na solicitação HTTP para a API externa")
+    except (KeyError, json.JSONDecodeError) as e:
+        raise HTTPException(status_code=500, detail="Erro ao processar a resposta da API externa")
     
+@app.get("/lol/{nickname}/top-champions/{count}")
+def getAPItopchampions(nickname: str, count: str):
+    try:
+        token = "RGAPI-c62b7eac-eed1-4a05-9823-1d858e634191"
+        region = "br1"
+        url = f'https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{nickname}?api_key={token}'
+        url_champions = "http://127.0.0.1:5555/get-champions"
+        response_summoner = requests.get(url)
+        response_summoner.raise_for_status()
+        response_champions = requests.get(url_champions)
+        response_champions.raise_for_status()
+        
+        data_summoner = response_summoner.json()
+        data_champions = response_champions.json()
+
+        puuid = data_summoner["puuid"]
+        name = data_summoner["name"]
+
+        url_top = f"https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?count={count}&api_key={token}"
+        response_top = requests.get(url_top)
+        response_top.raise_for_status()
+        data_top = response_top.json()
+
+        maestria_with_names = []
+        maestria_with_names.append(name)
+        for entry in data_top:
+            champion_id = str(entry["championId"])
+            champion_name = data_champions.get(champion_id, {}).get("name", "Nome não encontrado")
+            entry["championName"] = champion_name
+            maestria_with_names.append(entry)
+        return maestria_with_names
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail="Erro na solicitação HTTP para a API externa")
+    except (KeyError, json.JSONDecodeError) as e:
+        raise HTTPException(status_code=500, detail="Erro ao processar a resposta da API externa")
+
+
+    
+if __name__ == "__main__":
+    uvicorn.run(app, port=7777)
+
 """
     CNPJs: 
     11878898000111
