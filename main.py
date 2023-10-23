@@ -103,7 +103,7 @@ def getAPInickname(nickname: str):
 @app.get("/lol/{nickname}/top-champions/{count}")
 def getAPItopchampions(nickname: str, count: str):
     def read_champion_data():
-        with open("champions_data.json", "r") as file:
+        with open("championsData.json", "r") as file:
             data = json.load(file)
         return data
     
