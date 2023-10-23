@@ -8,6 +8,11 @@ from fastapi import HTTPException
 
 app = FastAPI()
 
+PROXIES = {
+	"http": "http://ct67ca:25INDUSTRIAconectada@proxy.br.bosch.com:8080",
+	"https": "http://ct67ca:25INDUSTRIAconectada@proxy.br.bosch.com:8080"
+}
+
 @app.get("/")
 def getItems():
     return fakeDatabase
@@ -48,7 +53,7 @@ def getAPICNPJ(cnpj: str):
     try:
         # Requisição da API CNPJ
         url = f'https://publica.cnpj.ws/cnpj/{cnpj}'
-        response = requests.get(url)
+        response = requests.get(url, proxies=PROXIES)
         response.raise_for_status()
         
         data = response.json()
@@ -77,7 +82,7 @@ def getAPInickname(nickname: str):
         region = "br1"
         # Requisição da API CNPJ
         url = f'https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{nickname}?api_key={token}'
-        response = requests.get(url)
+        response = requests.get(url, proxies=PROXIES)
         response.raise_for_status()
         
         data = response.json()
@@ -97,18 +102,21 @@ def getAPInickname(nickname: str):
     
 @app.get("/lol/{nickname}/top-champions/{count}")
 def getAPItopchampions(nickname: str, count: str):
+    def read_champion_data():
+        with open("champions_data.json", "r") as file:
+            data = json.load(file)
+        return data
+    
     try:
         token = "RGAPI-c62b7eac-eed1-4a05-9823-1d858e634191"
         region = "br1"
         url = f'https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{nickname}?api_key={token}'
-        url_champions = "http://127.0.0.1:5555/get-champions"
-        response_summoner = requests.get(url)
+        
+        response_summoner = requests.get(url, proxies=PROXIES)
         response_summoner.raise_for_status()
-        response_champions = requests.get(url_champions)
-        response_champions.raise_for_status()
         
         data_summoner = response_summoner.json()
-        data_champions = response_champions.json()
+        data_champions = read_champion_data()
 
         puuid = data_summoner["puuid"]
         name = data_summoner["name"]
